@@ -1,0 +1,56 @@
+/*Flag Oppty-Account to generate transaction records*/
+
+function Service_PreInvokeMethod(MethodName, Inputs, Outputs)
+{
+    if (MethodName == 'Flg_Opty')
+    {
+        var Bo = TheApplication().GetBusObject("Opportunity");
+        var Bc = Bo.GetBusComp("Opportunity");
+        var iRec = "";
+        with(Bc)
+        {
+            SetViewMode(AllView);
+            ActivateField("X_Group_Records");
+            ClearToQuery();
+            SetSearchSpec("X_Group_Records", 'OPTY_MIGRATE_01');
+            ExecuteQuery(ForwardOnly);
+            iRec = FirstRecord();
+            while (iRec)
+            {
+                SetFieldValue("X_Group_Records", 'OPTY_MIGRATE_02');
+                WriteRecord();
+                //SetFieldValue("X_Group_Records",'OPTY_MIGRATE_01');
+                //WriteRecord();
+                iRec = NextRecord();
+            }
+        }
+        return (CancelOperation);
+    }
+
+    if (MethodName == 'Flg_Acnt')
+    {
+        var Bo = TheApplication().GetBusObject("Account");
+        var Bc = Bo.GetBusComp("Account");
+        var iRec = "";
+        with(Bc)
+        {
+            SetViewMode(AllView);
+            ActivateField("X_Group_Accounts");
+            ClearToQuery();
+            SetSearchSpec("X_Group_Accounts", 'ACCNT_MIGRATE_01');
+            ExecuteQuery(ForwardOnly);
+            iRec = FirstRecord();
+            while (iRec)
+            {
+                SetFieldValue("X_Group_Accounts", 'ACCNT_MIGRATE_02');
+                WriteRecord();
+                //SetFieldValue("X_Group_Accounts",'ACCNT_MIGRATE_01');
+                //WriteRecord();
+                iRec = NextRecord();
+            }
+        }
+        return (CancelOperation);
+    }
+
+    return (ContinueOperation);
+}
