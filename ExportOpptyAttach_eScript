@@ -1,5 +1,4 @@
-
-/* eScript for pulling out oppty Attachment and placing under OpptyAttach folder unnder c:\siebel7*/
+/* eScript for pulling out oppty Attachment and placing under OpptyAttach folder under c:\siebel7*/
 
 
 function Service_PreInvokeMethod(MethodName, Inputs, Outputs)
