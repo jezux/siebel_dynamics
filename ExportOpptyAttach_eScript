@@ -1,0 +1,80 @@
+
+/* eScript for pulling out oppty Attachment and placing under OpptyAttach folder unnder c:\siebel7*/
+
+
+function Service_PreInvokeMethod(MethodName, Inputs, Outputs)
+{
+    if (MethodName == "ExportOpptyAttach")
+    {
+
+        var sFilePath = "c:\\Attch\\Oppty\\opty.xls";
+        var ExcelApp = COMCreateObject("Excel.Application");
+        var oWorkbooks = ExcelApp.Workbooks.Open(sFilePath);
+        var EndOfFile = true;
+        var RId;
+        var i = 0;
+        var oOpptyBO = TheApplication().GetBusObject("Opportunity");
+        var oOpptyAttBc = oOpptyBO.GetBusComp("Opportunity Attachment");
+        var strNewAttachPath = "C:\\Siebel7\\Temp\\";
+        var strOptyId;
+        var sFileName;
+        var sGetFileReturn;
+        Clib.system("rename C:\\Siebel7\\TEMP TEMP1");
+        Clib.mkdir("C:\\Siebel7\\TEMP");
+
+        while (EndOfFile)
+        {
+            RId = ExcelApp.ActiveSheet.Cells(i + 1, 1).Value();
+
+            if (RId == null || RId == "")
+            {
+                EndOfFile = false;
+                break;
+            }
+            i = i + 1;
+            with(oOpptyAttBc)
+            {
+                SetViewMode(AllView);
+                ActivateField("OpptyFileExt");
+                ActivateField("Oppty Id");
+                ClearToQuery();
+                SetSearchSpec("Id", RId);
+                SetSearchSpec("OpptyFileSrcType", 'FILE');
+                ExecuteQuery(ForwardOnly);
+                var isRecFound = FirstRecord();
+                while (isRecFound)
+                {
+                    sFileName = GetFieldValue("OpptyFileName");
+                    sGetFileReturn = InvokeMethod("GetFile", "OpptyFileName");
+
+                    strOptyId = GetFieldValue("Oppty Id");
+                    if (sGetFileReturn.indexOf("Success") >= 0)
+                    {
+                        var sFileFullPath = sGetFileReturn.substring(sGetFileReturn.indexOf(",") + 1);
+                        var sFileNameExn = GetFieldValue("OpptyFileExt");
+                        var sFileFormate = GetFieldValue("Id") + "_" + strOptyId + "_" + sFileName + "." + sFileNameExn;
+
+                        Clib.rename(sFileFullPath, strNewAttachPath + sFileFormate);
+                    }
+
+
+                    // TheApplication().RaiseErrorText(sFileFullPath);
+
+
+                    isRecFound = NextRecord();
+                } //while
+            }
+        }
+        Clib.system("rename C:\\Siebel7\\TEMP OptyAttch");
+        Clib.system("rename C:\\Siebel7\\TEMP1 TEMP");
+        // Close Excel with the Quit method on the Application object
+        ExcelApp.Application.Quit();
+
+        // Clear the object from memory
+        ExcelApp = null;
+        oOpptyAttBc = null;
+        oOpptyBO = null;
+        return (CancelOperation);
+    }
+
+}
